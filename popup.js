@@ -1,6 +1,7 @@
 const btn = document.getElementById("download");
 const statusEl = document.getElementById("status");
 
+// NOTE: lib/extract.js keeps an identical copy of makeFilename — popup can't share content-script globals. Keep both in sync.
 function makeFilename(pageUrl) {
   const m = (pageUrl || "").match(/\/(p|reel|tv)\/([^/?#]+)/);
   const id = m ? m[2] : "video";

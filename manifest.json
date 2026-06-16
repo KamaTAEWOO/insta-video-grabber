@@ -7,7 +7,7 @@
     "default_popup": "popup.html",
     "default_title": "인스타 영상 다운로드"
   },
-  "permissions": ["downloads"],
+  "permissions": ["downloads", "activeTab"],
   "host_permissions": ["https://www.instagram.com/*"],
   "content_scripts": [
     {
