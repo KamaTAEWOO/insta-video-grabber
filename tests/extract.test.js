@@ -48,3 +48,40 @@ test("extractOgVideo: secure_url을 우선 읽는다", () => {
 test("extractOgVideo: 메타가 없으면 null", () => {
   assert.equal(extractOgVideo(mockDoc({})), null);
 });
+
+const { collectVideoSrcs, extractFromDocument } = require("../lib/extract.js");
+
+function mockVideoDoc(videoSrcs, metaMap) {
+  const videos = videoSrcs.map((src) => ({
+    src,
+    querySelectorAll: () => [],
+  }));
+  return {
+    querySelector(sel) {
+      const m = sel.match(/property="([^"]+)"/);
+      const key = m && m[1];
+      if (key && metaMap && metaMap[key]) {
+        return { getAttribute: () => metaMap[key] };
+      }
+      return null;
+    },
+    querySelectorAll(sel) {
+      return sel === "video" ? videos : [];
+    },
+  };
+}
+
+test("collectVideoSrcs: video src들을 모은다", () => {
+  const doc = mockVideoDoc(["https://cdn/a.mp4", ""]);
+  assert.deepEqual(collectVideoSrcs(doc), ["https://cdn/a.mp4"]);
+});
+
+test("extractFromDocument: og:video가 있으면 그것을 선택", () => {
+  const doc = mockVideoDoc(["blob:x"], { "og:video": "https://cdn/og.mp4" });
+  assert.equal(extractFromDocument(doc), "https://cdn/og.mp4");
+});
+
+test("extractFromDocument: og가 없으면 video src로 폴백", () => {
+  const doc = mockVideoDoc(["https://cdn/v.mp4"], {});
+  assert.equal(extractFromDocument(doc), "https://cdn/v.mp4");
+});
