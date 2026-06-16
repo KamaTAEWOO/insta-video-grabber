@@ -38,9 +38,11 @@ document.querySelectorAll("[data-copy]").forEach((b) =>
 document.querySelectorAll("[data-save]").forEach((b) =>
   b.addEventListener("click", () => {
     const el = document.getElementById(b.dataset.save);
+    if (!el.value.trim()) return;
     const blob = new Blob([el.value], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     chrome.downloads.download({ url, filename: `instagram_${b.dataset.name}.txt` });
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   })
 );
 document.querySelectorAll("[data-clear]").forEach((b) =>
