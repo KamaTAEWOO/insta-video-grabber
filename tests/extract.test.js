@@ -85,3 +85,23 @@ test("extractFromDocument: og가 없으면 video src로 폴백", () => {
   const doc = mockVideoDoc(["https://cdn/v.mp4"], {});
   assert.equal(extractFromDocument(doc), "https://cdn/v.mp4");
 });
+
+const { makeFilename } = require("../lib/extract.js");
+
+test("makeFilename: /p/ 게시물 ID로 파일명", () => {
+  assert.equal(
+    makeFilename("https://www.instagram.com/p/DZE1ubJoHsB/?x=1"),
+    "instagram_DZE1ubJoHsB.mp4"
+  );
+});
+
+test("makeFilename: /reel/ ID로 파일명", () => {
+  assert.equal(
+    makeFilename("https://www.instagram.com/reel/ABC123/"),
+    "instagram_ABC123.mp4"
+  );
+});
+
+test("makeFilename: 매칭 실패 시 기본값", () => {
+  assert.equal(makeFilename("https://www.instagram.com/"), "instagram_video.mp4");
+});
