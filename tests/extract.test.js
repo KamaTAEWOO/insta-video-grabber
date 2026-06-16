@@ -119,6 +119,15 @@ test("extractEmbeddedVideoUrl: playable_url 키로 폴백", () => {
   assert.equal(result, "https://cdn.cdninstagram.com/v/sd.mp4?e=1");
 });
 
+test("extractEmbeddedVideoUrl: \\u0026 유니코드 이스케이프된 &를 &로 푼다", () => {
+  // Instagram은 보안상 URL의 &를 &(유니코드 이스케이프)로 인코딩한다.
+  // NOTE: String.raw를 쓰면 소스의 &가 파싱 단계에서 &로 변환되어 false-positive가 된다.
+  //       따라서 일반 문자열에 명시적 \\ 로 리터럴 백슬래시를 넣어 진짜 & / \/ 를 만든다.
+  const html = '{"video_url":"https:\\/\\/cdn\\/v.mp4?a=1\\u0026b=2"}';
+  const result = extractEmbeddedVideoUrl(html);
+  assert.equal(result, "https://cdn/v.mp4?a=1&b=2");
+});
+
 test("extractEmbeddedVideoUrl: 어떤 키도 없으면 null", () => {
   assert.equal(extractEmbeddedVideoUrl("<html>no video keys here</html>"), null);
 });
