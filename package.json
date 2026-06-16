@@ -1,0 +1,9 @@
+{
+  "name": "insta-video-grabber",
+  "version": "0.1.0",
+  "private": true,
+  "description": "공개 인스타그램 피드/릴스 영상 다운로드 크롬 확장 (개인용)",
+  "scripts": {
+    "test": "node --test"
+  }
+}
