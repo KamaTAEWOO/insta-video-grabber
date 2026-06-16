@@ -91,6 +91,50 @@ test("extractFromDocument: og가 없으면 video src로 폴백", () => {
   assert.equal(extractFromDocument(doc), "https://cdn/v.mp4");
 });
 
+const { extractEmbeddedVideoUrl } = require("../lib/extract.js");
+
+// --- extractEmbeddedVideoUrl tests ---
+
+test("extractEmbeddedVideoUrl: video_versions 배열에서 첫 번째 url 추출 + unescape", () => {
+  const html = String.raw`"video_versions":[{"type":101,"width":720,"height":1280,"url":"https:\/\/cdn.cdninstagram.com\/v\/video.mp4?e=123&ccb=4"}]`;
+  const result = extractEmbeddedVideoUrl(html);
+  assert.equal(result, "https://cdn.cdninstagram.com/v/video.mp4?e=123&ccb=4");
+});
+
+test("extractEmbeddedVideoUrl: video_url 키로 폴백", () => {
+  const html = String.raw`{"video_url":"https:\/\/cdn.cdninstagram.com\/v\/plain.mp4?e=1"}`;
+  const result = extractEmbeddedVideoUrl(html);
+  assert.equal(result, "https://cdn.cdninstagram.com/v/plain.mp4?e=1");
+});
+
+test("extractEmbeddedVideoUrl: playable_url_quality_hd 키로 폴백", () => {
+  const html = String.raw`{"playable_url_quality_hd":"https:\/\/cdn.cdninstagram.com\/v\/hd.mp4?e=1"}`;
+  const result = extractEmbeddedVideoUrl(html);
+  assert.equal(result, "https://cdn.cdninstagram.com/v/hd.mp4?e=1");
+});
+
+test("extractEmbeddedVideoUrl: playable_url 키로 폴백", () => {
+  const html = String.raw`{"playable_url":"https:\/\/cdn.cdninstagram.com\/v\/sd.mp4?e=1"}`;
+  const result = extractEmbeddedVideoUrl(html);
+  assert.equal(result, "https://cdn.cdninstagram.com/v/sd.mp4?e=1");
+});
+
+test("extractEmbeddedVideoUrl: 어떤 키도 없으면 null", () => {
+  assert.equal(extractEmbeddedVideoUrl("<html>no video keys here</html>"), null);
+});
+
+test("extractEmbeddedVideoUrl: null 입력 → null", () => {
+  assert.equal(extractEmbeddedVideoUrl(null), null);
+});
+
+test("extractEmbeddedVideoUrl: video_versions 우선, video_url은 무시", () => {
+  // Both keys present — video_versions wins (first priority)
+  const html = String.raw`"video_versions":[{"url":"https:\/\/cdn.cdninstagram.com\/v\/versions.mp4"}]` +
+    String.raw` "video_url":"https:\/\/cdn.cdninstagram.com\/v\/graphql.mp4"`;
+  const result = extractEmbeddedVideoUrl(html);
+  assert.equal(result, "https://cdn.cdninstagram.com/v/versions.mp4");
+});
+
 const { makeFilename } = require("../lib/extract.js");
 
 test("makeFilename: /p/ 게시물 ID로 파일명", () => {
