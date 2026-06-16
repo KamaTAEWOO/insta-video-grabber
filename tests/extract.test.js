@@ -144,6 +144,61 @@ test("extractEmbeddedVideoUrl: video_versions 우선, video_url은 무시", () =
   assert.equal(result, "https://cdn.cdninstagram.com/v/versions.mp4");
 });
 
+const { shortcodeToMediaId } = require("../lib/extract.js");
+
+// --- shortcodeToMediaId tests ---
+// Base64 alphabet: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_
+// A=0, B=1, ..., Z=25, a=26, ..., z=51, 0=52, ..., 9=61, -=62, _=63
+// Each character contributes: id = id * 64 + charIndex
+
+test("shortcodeToMediaId: 단일 문자 A → 0", () => {
+  // A is index 0; result is 0
+  assert.equal(shortcodeToMediaId("A"), "0");
+});
+
+test("shortcodeToMediaId: 단일 문자 B → 1", () => {
+  // B is index 1
+  assert.equal(shortcodeToMediaId("B"), "1");
+});
+
+test("shortcodeToMediaId: BA → 64 (1*64 + 0)", () => {
+  // B=1, A=0 → 1*64 + 0 = 64
+  assert.equal(shortcodeToMediaId("BA"), "64");
+});
+
+test("shortcodeToMediaId: BB → 65 (1*64 + 1)", () => {
+  // B=1, B=1 → 1*64 + 1 = 65
+  assert.equal(shortcodeToMediaId("BB"), "65");
+});
+
+test("shortcodeToMediaId: _ → 63 (알파벳 마지막 문자)", () => {
+  // _ is the last character at index 63
+  assert.equal(shortcodeToMediaId("_"), "63");
+});
+
+test("shortcodeToMediaId: - → 62 (끝에서 두 번째 문자)", () => {
+  // - is at index 62
+  assert.equal(shortcodeToMediaId("-"), "62");
+});
+
+test("shortcodeToMediaId: 실제 숏코드 DZE1ubJoHsB → 올바른 숫자 ID", () => {
+  // Confirmed by running the function: 3910486663177992961
+  assert.equal(shortcodeToMediaId("DZE1ubJoHsB"), "3910486663177992961");
+});
+
+test("shortcodeToMediaId: 잘못된 문자(!) → null", () => {
+  assert.equal(shortcodeToMediaId("!"), null);
+});
+
+test("shortcodeToMediaId: 잘못된 문자가 중간에 있으면 → null", () => {
+  assert.equal(shortcodeToMediaId("AB!C"), null);
+});
+
+test("shortcodeToMediaId: 빈 문자열 → 0", () => {
+  // No iterations: id stays 0n → "0"
+  assert.equal(shortcodeToMediaId(""), "0");
+});
+
 const { makeFilename } = require("../lib/extract.js");
 
 test("makeFilename: /p/ 게시물 ID로 파일명", () => {
