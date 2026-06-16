@@ -5,8 +5,10 @@
   "description": "공개 인스타그램 피드/릴스 영상을 다운로드합니다 (개인용).",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "인스타 영상 다운로드"
+    "default_title": "인스타 영상 다운로드",
+    "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
   },
+  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
   "permissions": ["downloads", "activeTab"],
   "host_permissions": ["https://www.instagram.com/*"],
   "content_scripts": [
