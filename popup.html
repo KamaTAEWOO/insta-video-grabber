@@ -5,11 +5,53 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <main class="card">
-    <h1 class="title">📥 인스타 영상 다운로드</h1>
-    <p id="status" class="status">영상을 찾는 중…</p>
-    <button id="download" class="btn" disabled>⬇ 다운로드</button>
-  </main>
+  <nav class="tabs">
+    <button class="tab active" data-tab="download">다운로드</button>
+    <button class="tab" data-tab="transcript">대사추출</button>
+    <button class="tab" data-tab="caption">자막추출</button>
+    <button class="tab" data-tab="settings">설정</button>
+  </nav>
+
+  <section class="panel active" id="panel-download">
+    <p id="dl-status" class="status">영상을 찾는 중…</p>
+    <button id="dl-btn" class="btn" disabled>⬇ 다운로드</button>
+  </section>
+
+  <section class="panel" id="panel-transcript">
+    <p class="hint">영상의 음성을 텍스트로 옮깁니다. (OpenAI 키 필요)</p>
+    <button id="tr-btn" class="btn">대사 추출하기</button>
+    <p id="tr-status" class="status"></p>
+    <textarea id="tr-out" class="out" readonly placeholder="결과가 여기 표시됩니다"></textarea>
+    <div class="row">
+      <button class="mini" data-copy="tr-out">복사</button>
+      <button class="mini" data-save="tr-out" data-name="대사">.txt 저장</button>
+      <button class="mini" data-clear="tr-out">지우기</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-caption">
+    <p class="hint">화면에 떠 있는 자막(번인 텍스트)을 읽어옵니다. (OpenAI 키 필요)</p>
+    <button id="cap-btn" class="btn">자막 추출하기</button>
+    <p id="cap-status" class="status"></p>
+    <textarea id="cap-out" class="out" readonly placeholder="결과가 여기 표시됩니다"></textarea>
+    <div class="row">
+      <button class="mini" data-copy="cap-out">복사</button>
+      <button class="mini" data-save="cap-out" data-name="자막">.txt 저장</button>
+      <button class="mini" data-clear="cap-out">지우기</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-settings">
+    <p class="hint">OpenAI API 키를 입력하세요. 로컬(chrome.storage)에만 저장됩니다.</p>
+    <input id="key-input" class="input" type="password" placeholder="sk-..." />
+    <button id="key-save" class="btn">키 저장</button>
+    <p id="key-status" class="status"></p>
+  </section>
+
+  <script src="lib/extract.js"></script>
+  <script src="lib/media.js"></script>
+  <script src="lib/openai.js"></script>
+  <script src="lib/storage.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
