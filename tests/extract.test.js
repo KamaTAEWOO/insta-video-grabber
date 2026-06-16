@@ -45,6 +45,11 @@ test("extractOgVideo: secure_url을 우선 읽는다", () => {
   assert.equal(extractOgVideo(doc), "https://cdn/secure.mp4");
 });
 
+test("extractOgVideo: secure_url·og:video가 없으면 og:video:url로 폴백", () => {
+  const doc = mockDoc({ "og:video:url": "https://cdn/url.mp4" });
+  assert.equal(extractOgVideo(doc), "https://cdn/url.mp4");
+});
+
 test("extractOgVideo: 메타가 없으면 null", () => {
   assert.equal(extractOgVideo(mockDoc({})), null);
 });
@@ -99,6 +104,13 @@ test("makeFilename: /reel/ ID로 파일명", () => {
   assert.equal(
     makeFilename("https://www.instagram.com/reel/ABC123/"),
     "instagram_ABC123.mp4"
+  );
+});
+
+test("makeFilename: /tv/ ID로 파일명", () => {
+  assert.equal(
+    makeFilename("https://www.instagram.com/tv/XYZ789/"),
+    "instagram_XYZ789.mp4"
   );
 });
 
