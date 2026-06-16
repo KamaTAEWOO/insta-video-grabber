@@ -18,3 +18,11 @@ test("pickFrameTimes: duration이 0 이하면 빈 배열", () => {
 test("pickFrameTimes: 긴 영상은 max개로 제한", () => {
   assert.equal(pickFrameTimes(100, 8).length, 8);
 });
+
+test("pickFrameTimes: Infinity duration이면 빈 배열", () => {
+  assert.deepEqual(pickFrameTimes(Infinity, 8), []);
+});
+
+test("pickFrameTimes: NaN duration이면 빈 배열", () => {
+  assert.deepEqual(pickFrameTimes(NaN, 8), []);
+});

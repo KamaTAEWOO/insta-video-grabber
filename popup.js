@@ -140,7 +140,7 @@ async function initCaption() {
       const tmpUrl = URL.createObjectURL(blob);
       video.src = tmpUrl;
       await new Promise((r, j) => { video.onloadedmetadata = () => r(); video.onerror = () => j(new Error("video load failed")); });
-      const duration = video.duration || 10;
+      const duration = await getDuration(video);
       URL.revokeObjectURL(tmpUrl);
       const times = pickFrameTimes(duration, 8);
       const frames = await captureFrames(blob, times);
