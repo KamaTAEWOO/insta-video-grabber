@@ -215,6 +215,14 @@ test("makeFilename: /reel/ ID로 파일명", () => {
   );
 });
 
+test("makeFilename: /reels/ (릴스 탭 복수형) ID로 파일명", () => {
+  // 릴스 탭 URL은 /reels/<id>/ 형태 — 이걸 인식 못 하면 instagram_video.mp4로 떨어진다.
+  assert.equal(
+    makeFilename("https://www.instagram.com/reels/DZ6JLhuPHQ2/"),
+    "instagram_DZ6JLhuPHQ2.mp4"
+  );
+});
+
 test("makeFilename: /tv/ ID로 파일명", () => {
   assert.equal(
     makeFilename("https://www.instagram.com/tv/XYZ789/"),
@@ -224,4 +232,92 @@ test("makeFilename: /tv/ ID로 파일명", () => {
 
 test("makeFilename: 매칭 실패 시 기본값", () => {
   assert.equal(makeFilename("https://www.instagram.com/"), "instagram_video.mp4");
+});
+
+const { extractVideoUrlForShortcode } = require("../lib/extract.js");
+
+// --- extractVideoUrlForShortcode tests ---
+// 버그: Instagram은 SPA라 content.js가 한 번만 로드되고, 본 영상들의 데이터가
+// innerHTML에 누적된다. 전역 첫 매칭(extractEmbeddedVideoUrl)은 "먼저 박힌(이전)
+// 영상"을 집어 잘못된 영상을 다운로드시킨다. 현재 주소의 shortcode를 닻으로 삼아
+// "지금 보는 영상"에 속한 URL만 골라내야 한다.
+
+test("extractVideoUrlForShortcode: 여러 영상이 섞인 HTML에서 현재 shortcode의 영상을 고른다", () => {
+  // 영상 A(코드 AAA111)가 먼저, 영상 B(코드 BBB222)가 뒤에 박힌 페이지.
+  // 사용자가 보는 건 B. 전역 첫 매칭이면 A가 잡히는 버그 → shortcode 앵커링으로 B를 골라야 한다.
+  const html = String.raw`{"code":"AAA111","video_versions":[{"url":"https:\/\/cdn\/A.mp4"}]} ` +
+    String.raw`{"code":"BBB222","video_versions":[{"url":"https:\/\/cdn\/B.mp4?e=1&ccb=2"}]}`;
+  assert.equal(
+    extractVideoUrlForShortcode(html, "BBB222"),
+    "https://cdn/B.mp4?e=1&ccb=2"
+  );
+});
+
+test("extractVideoUrlForShortcode: code가 video_versions 뒤에 와도 현재 영상을 고른다", () => {
+  // JSON 키 순서는 불확정 — code가 video_versions 뒤에 올 수 있다.
+  const html = String.raw`{"video_versions":[{"url":"https:\/\/cdn\/A.mp4"}],"code":"AAA111"} ` +
+    String.raw`{"video_versions":[{"url":"https:\/\/cdn\/B.mp4"}],"code":"BBB222"}`;
+  assert.equal(extractVideoUrlForShortcode(html, "BBB222"), "https://cdn/B.mp4");
+});
+
+test("extractVideoUrlForShortcode: shortcode를 HTML에서 못 찾으면 전역 첫 매칭으로 폴백", () => {
+  const html = String.raw`{"video_versions":[{"url":"https:\/\/cdn\/first.mp4"}]}`;
+  assert.equal(
+    extractVideoUrlForShortcode(html, "NOTINPAGE"),
+    "https://cdn/first.mp4"
+  );
+});
+
+test("extractVideoUrlForShortcode: shortcode가 없으면(null) 전역 첫 매칭", () => {
+  const html = String.raw`{"video_versions":[{"url":"https:\/\/cdn\/x.mp4"}]}`;
+  assert.equal(extractVideoUrlForShortcode(html, null), "https://cdn/x.mp4");
+});
+
+test("extractVideoUrlForShortcode: null HTML → null", () => {
+  assert.equal(extractVideoUrlForShortcode(null, "BBB222"), null);
+});
+
+const { pickCurrentMp4 } = require("../lib/extract.js");
+
+// --- pickCurrentMp4 tests ---
+// 릴스 버그: content.js가 페이지 로드 시점의 '첫 화면' mp4(capturedMp4[0])를 집어
+// 릴스를 넘겨도 첫 영상만 받아진다. 현재 보는 영상은 '가장 최근에' 로드되므로,
+// 누적 배열의 뒤(최근)부터 골라야 한다. init segment(수백 B 헤더 파일)는 건너뛴다.
+// 입력: [{ url, size }] (size = 바이트 전송량).
+
+test("pickCurrentMp4: 가장 최근(마지막)에 로드된 mp4를 고른다 — 첫 화면 고착 방지", () => {
+  const entries = [
+    { url: "https://cdn/first.mp4", size: 800000 },
+    { url: "https://cdn/current.mp4", size: 900000 },
+  ];
+  assert.equal(pickCurrentMp4(entries), "https://cdn/current.mp4");
+});
+
+test("pickCurrentMp4: init segment(작은 파일)는 건너뛰고 실제 영상을 고른다", () => {
+  const entries = [
+    { url: "https://cdn/real.mp4", size: 700000 },
+    { url: "https://cdn/init.mp4", size: 818 },
+  ];
+  assert.equal(pickCurrentMp4(entries), "https://cdn/real.mp4");
+});
+
+test("pickCurrentMp4: blob은 제외한다", () => {
+  const entries = [
+    { url: "blob:https://x", size: 900000 },
+    { url: "https://cdn/v.mp4", size: 700000 },
+  ];
+  assert.equal(pickCurrentMp4(entries), "https://cdn/v.mp4");
+});
+
+test("pickCurrentMp4: 빈 입력 → null", () => {
+  assert.equal(pickCurrentMp4([]), null);
+  assert.equal(pickCurrentMp4(undefined), null);
+});
+
+test("pickCurrentMp4: 모두 작은 파일이면 그래도 최근 mp4를 반환(완전 실패 방지)", () => {
+  const entries = [
+    { url: "https://cdn/a.mp4", size: 800 },
+    { url: "https://cdn/b.mp4", size: 900 },
+  ];
+  assert.equal(pickCurrentMp4(entries), "https://cdn/b.mp4");
 });

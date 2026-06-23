@@ -7,7 +7,6 @@
 <body>
   <nav class="tabs">
     <button class="tab active" data-tab="download">다운로드</button>
-    <button class="tab" data-tab="transcript">대사추출</button>
     <button class="tab" data-tab="caption">자막추출</button>
     <button class="tab" data-tab="settings">설정</button>
   </nav>
@@ -15,18 +14,6 @@
   <section class="panel active" id="panel-download">
     <p id="dl-status" class="status">영상을 찾는 중…</p>
     <button id="dl-btn" class="btn" disabled>⬇ 다운로드</button>
-  </section>
-
-  <section class="panel" id="panel-transcript">
-    <p class="hint">영상의 음성을 텍스트로 옮깁니다. (OpenAI 키 필요)</p>
-    <button id="tr-btn" class="btn">대사 추출하기</button>
-    <p id="tr-status" class="status"></p>
-    <textarea id="tr-out" class="out" readonly placeholder="결과가 여기 표시됩니다"></textarea>
-    <div class="row">
-      <button class="mini" data-copy="tr-out">복사</button>
-      <button class="mini" data-save="tr-out" data-name="대사">.txt 저장</button>
-      <button class="mini" data-clear="tr-out">지우기</button>
-    </div>
   </section>
 
   <section class="panel" id="panel-caption">

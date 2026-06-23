@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Insta Video Grabber",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "description": "공개 인스타그램 피드/릴스 영상을 다운로드합니다 (개인용).",
   "action": {
     "default_popup": "popup.html",

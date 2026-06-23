@@ -1,12 +1,12 @@
 // ---- 공용 ----
 function makeFilename(pageUrl) {
   // NOTE: lib/extract.js와 동일 복사본 — 동기화 유지.
-  const m = (pageUrl || "").match(/\/(p|reel|tv)\/([^/?#]+)/);
+  const m = (pageUrl || "").match(/\/(p|reel|reels|tv)\/([^/?#]+)/);
   const id = m ? m[2] : "video";
   return `instagram_${id}.mp4`;
 }
 function videoIdFrom(pageUrl) {
-  const m = (pageUrl || "").match(/\/(p|reel|tv)\/([^/?#]+)/);
+  const m = (pageUrl || "").match(/\/(p|reel|reels|tv)\/([^/?#]+)/);
   return m ? m[2] : "current";
 }
 async function activeTab() {
@@ -85,37 +85,6 @@ async function initSettings() {
   };
 }
 
-// ---- 대사추출 탭 ----
-async function initTranscript() {
-  const btn = document.getElementById("tr-btn");
-  const status = document.getElementById("tr-status");
-  const out = document.getElementById("tr-out");
-  const tab = await activeTab();
-  const vid = videoIdFrom(tab && tab.url);
-  out.value = await getResult(vid, "transcript"); // 이전 결과 복원
-
-  btn.onclick = async () => {
-    const key = await getKey();
-    if (!key) { status.textContent = "설정 탭에서 OpenAI 키를 입력하세요"; return; }
-    let res;
-    try { res = await extractCurrentUrl(tab.id); }
-    catch (e) { status.textContent = "인스타 게시물 페이지에서 시도하세요"; return; }
-    if (!res.url) { status.textContent = "영상을 못 찾았어요(영상 한 번 재생 후 재시도)"; return; }
-    btn.disabled = true; status.textContent = "영상 받는 중… (팝업을 닫지 마세요)";
-    try {
-      const blob = await fetchAsBlob(res.url);
-      if (blob.size > 25 * 1024 * 1024) { status.textContent = "영상이 너무 깁니다(25MB 초과) — 대사추출 불가"; btn.disabled = false; return; }
-      status.textContent = "음성 인식 중…";
-      const text = await transcribeAudio(blob, key);
-      out.value = text || "(인식된 대사 없음)";
-      await setResult(vid, "transcript", out.value);
-      status.textContent = "✓ 완료";
-    } catch (e) {
-      status.textContent = e.message.includes("401") ? "OpenAI 키를 확인하세요" : "실패: " + e.message;
-    } finally { btn.disabled = false; }
-  };
-}
-
 // ---- 자막추출 탭 ----
 async function initCaption() {
   const btn = document.getElementById("cap-btn");
@@ -157,5 +126,4 @@ async function initCaption() {
 
 initDownload();
 initSettings();
-initTranscript();
 initCaption();
